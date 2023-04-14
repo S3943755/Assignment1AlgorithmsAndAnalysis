@@ -16,10 +16,7 @@ class ArraySpreadsheet(BaseSpreadsheet):
         # TO BE IMPLEMENTED
 
         # initialise cell and 2d list which is in row x column (so 1,2 would be row 1 column 2)
-        spreadsheet = [[]]
-
-
-        pass
+        self.spreadsheet = []
 
 
     def buildSpreadsheet(self, lCells: [Cell]):
@@ -28,20 +25,41 @@ class ArraySpreadsheet(BaseSpreadsheet):
         @param lCells: list of cells to be stored
         """
         
-        # make 2d lists with the newlist variable being a row and teh content being a column
+        
         # TO BE IMPLEMENTED
-        [CellA(row,col,val), CellB(row,col,val), CellC(row,col,val)]
+        # make 2d lists with the newlist variable being a row and teh content being a column
+        #[CellA(row,col,val), CellB(row,col,val), CellC(row,col,val)]
+
+
+        rowMax = -1
+        colMax = -1
 
         # find dimensions for spreadsheet
-        for Cells in lCells:
-            highestRowNo
-            highestColNo
+        for cell in lCells:
+            if (rowMax < cell.row):
+                rowMax = cell.row
+            if (colMax < cell.col):
+                colMax = cell.col
 
         # build the spreadsheet size filling each column with nulls
+        
+        # make temp list
+        tempColList = []
+        
+        # append columns to spreadsheet
+        for i in range(0, rowMax + 1):
+
+            # build col
+            tempColList = []
+
+            for i in range(0, colMax + 1):
+                tempColList.append(None)
+
+            self.spreadsheet.append(tempColList)
 
         # Insert Cells by spreadsheet[row][col] = val
-
-        pass
+        for cell in lCells:
+            self.spreadsheet[cell.row][cell.col] = cell.val
 
 
     def appendRow(self)->bool:
@@ -52,7 +70,14 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        tempColList = []
+        for i in range(0, self.colNum()):
+            tempColList.append(None)
+        
+        self.spreadsheet.append(tempColList)
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -66,12 +91,14 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        self.spreadsheet.append([])
-
-
-        pass
-
-        # REPLACE WITH APPROPRIATE RETURN VALUE
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        rowAmount = self.rowNum()
+        
+        for i in range(0, rowAmount):
+            self.spreadsheet[i].append(None)
+        
         return True
 
 
@@ -85,7 +112,20 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        # checks if input is valid
+        if (rowIndex < 0 or rowIndex > self.rowNum()):
+            return False
+        
+        # make a new empty column for the new row
+        tempColList = []
+        for i in range(0, self.colNum()):
+            tempColList.append(None)
+
+        # insert new row
+        self.spreadsheet.insert(rowIndex, tempColList)
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -101,7 +141,16 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        # checks if input is valid
+        if (colIndex < 0 or colIndex > self.colNum()):
+            return False
+        
+        # go through each row, split each column for desired index and add new None value at desired index
+        for row in self.spreadsheet:
+            row.insert(colIndex, None)
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -131,10 +180,7 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
-
-        # REPLACE WITH APPROPRIATE RETURN VALUE
-        return 0
+        return len(self.spreadsheet)
 
 
     def colNum(self)->int:
@@ -143,10 +189,7 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
-
-        # REPLACE WITH APPROPRIATE RETURN VALUE
-        return 0
+        return len(self.spreadsheet[0])
 
 
 
@@ -177,3 +220,13 @@ class ArraySpreadsheet(BaseSpreadsheet):
 
         # TO BE IMPLEMENTED
         return []
+
+    def uninitialisedBoardCheck(self) -> bool:
+        """
+        @return Returns false if rowNum or colNum do not exist, otherwise returns true.
+        """
+
+        if (self.rowNum() < 0 or self.colNum() < 0):
+            return True
+        
+        return False
