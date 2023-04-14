@@ -14,6 +14,11 @@ class ArraySpreadsheet(BaseSpreadsheet):
 
     def __init__(self):
         # TO BE IMPLEMENTED
+
+        # initialise cell and 2d list which is in row x column (so 1,2 would be row 1 column 2)
+        spreadsheet = [[]]
+
+
         pass
 
 
@@ -22,8 +27,20 @@ class ArraySpreadsheet(BaseSpreadsheet):
         Construct the data structure to store nodes.
         @param lCells: list of cells to be stored
         """
-
+        
+        # make 2d lists with the newlist variable being a row and teh content being a column
         # TO BE IMPLEMENTED
+        [CellA(row,col,val), CellB(row,col,val), CellC(row,col,val)]
+
+        # find dimensions for spreadsheet
+        for Cells in lCells:
+            highestRowNo
+            highestColNo
+
+        # build the spreadsheet size filling each column with nulls
+
+        # Insert Cells by spreadsheet[row][col] = val
+
         pass
 
 
@@ -49,6 +66,9 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
+        self.spreadsheet.append([])
+
+
         pass
 
         # REPLACE WITH APPROPRIATE RETURN VALUE

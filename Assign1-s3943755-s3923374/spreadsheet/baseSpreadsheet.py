@@ -14,6 +14,9 @@ class BaseSpreadsheet:
         Construct the data structure to store nodes.
         @param lCells: list of cells to be stored
         """
+        data = data
+        next = None
+        prev = None
         pass
 
 
