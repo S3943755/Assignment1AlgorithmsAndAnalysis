@@ -168,7 +168,11 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        # checking if input within spreadsheet dimension range
+        if ((rowIndex < 0 or rowIndex > self.rowNum() - 1) or (colIndex < 0 or colIndex > self.colNum() - 1)):
+            return False
+        
+        self.spreadsheet[rowIndex][colIndex] = value
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -201,12 +205,15 @@ class ArraySpreadsheet(BaseSpreadsheet):
 
         @return List of cells (row, col) that contains the input value.
 	    """
-
-        # TO BE IMPLEMENTED
-        pass
+        returnList = []
+        for i in range(0, self.rowNum()):
+            for j in range(0, self.colNum()):
+                if (self.spreadsheet[i][j] == value):
+                    currCellIndex = [i, j]
+                    returnList.append(currCellIndex)
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
-        return []
+        return returnList
 
 
 
@@ -214,12 +221,15 @@ class ArraySpreadsheet(BaseSpreadsheet):
         """
         @return A list of cells that have values (i.e., all non None cells).
         """
+        returnList = []
+        for i in range(0, self.rowNum()):
+            for j in range(0, self.colNum()):
+                if isinstance(self.spreadsheet[i][j], (int, float)):
+                    currCell = Cell(i, j, self.spreadsheet[i][j])
+                    returnList.append(currCell)
 
         # TO BE IMPLEMENTED
-        pass
-
-        # TO BE IMPLEMENTED
-        return []
+        return returnList
 
     def uninitialisedBoardCheck(self) -> bool:
         """
