@@ -16,7 +16,10 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
     def __init__(self):
         # TO BE IMPLEMENTED
-        pass
+        self.colA = []
+        self.valA = []
+        self.sumA = [0]
+        self.colLength = -1
 
 
     def buildSpreadsheet(self, lCells: [Cell]):
@@ -26,7 +29,32 @@ class CSRSpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        # Quick sort all the cells based on row then append the sorted array cell value's into valA and column index into colA
+        lCells = self.quickSortCol(lCells)
+
+        sum = 0
+        row = 0
+
+        # append all cells into self variables and calculate sum
+        for cell in lCells:
+            self.colA.append(cell.col)
+            self.valA.append(cell.val)
+            self.colLength =  cell.col
+
+            # checks if the row for the cell is the same as the row focused on for sumA index
+            while (row != cell.row):
+                self.sumA.append(sum)
+
+                row += 1
+            
+            sum += cell.val
+
+        # add self again for final cell
+        self.sumA.append(sum)
+        
+        print("colA:", self.colA)
+        print("valA:", self.valA)
+        print("sumA:", self.sumA)
 
 
     def appendRow(self):
@@ -36,8 +64,10 @@ class CSRSpreadsheet(BaseSpreadsheet):
         @return True if operation was successful, or False if not.
         """
 
+        
+
         # TO BE IMPLEMENTED
-        pass
+        self.sumA.append(self.sumA[self.rowNum - 1])
 
 
     def appendCol(self):
@@ -48,7 +78,7 @@ class CSRSpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
-        pass
+        self.colLength += 1
 
 
     def insertRow(self, rowIndex: int)->bool:
@@ -59,6 +89,13 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
         @return True if operation was successful, or False if not, e.g., rowIndex is invalid.
         """
+        # TO BE IMPLEMENTED
+        # check if input is within range of the spreadsheet
+        if (rowIndex < 0 or rowIndex > self.rowNum()):
+            return False
+        
+        # move sumA values to add new row
+        self.sumA.insert(rowIndex, self.sumA[rowIndex - 1])
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -72,6 +109,13 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
         return True if operation was successful, or False if not, e.g., colIndex is invalid.
         """
+        # TO BE IMPLEMENTED
+        if (colIndex < 0 or colIndex > self.colLength):
+            return False
+
+        for col in self.colA:
+            if col >= colIndex:
+                col += 1
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -100,7 +144,8 @@ class CSRSpreadsheet(BaseSpreadsheet):
         @return Number of rows the spreadsheet has.
         """
         # TO BE IMPLEMENTED
-        return 0
+
+        return len(self.sumA) - 1
 
 
     def colNum(self)->int:
@@ -108,7 +153,7 @@ class CSRSpreadsheet(BaseSpreadsheet):
         @return Number of column the spreadsheet has.
         """
         # TO BE IMPLEMENTED
-        return 0
+        return self.colLength
 
 
 
@@ -132,7 +177,30 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
     def entries(self) -> [Cell]:
         """
-        return a list of cells that have values (i.e., all non None cells).
+        @return a list of cells that have values (i.e., all non None cells).
         """
 
         return []
+
+    def quickSortCol(self, lCells: [Cell]) -> [Cell]:
+        """
+        @return a sorted list of the inputted cells.
+        """
+        
+        if len(lCells) <= 1:
+            return lCells
+        
+        else:
+            pivot = lCells[0]
+            leftVals = []
+            rightVals = []
+
+            for i in range(1, len(lCells)):
+                
+                if (lCells[i].row < pivot.row):
+                    leftVals.append(lCells[i])
+
+                else:
+                    rightVals.append(lCells[i])
+        
+        return self.quickSortCol(leftVals) + [pivot] + self.quickSortCol(rightVals)
