@@ -39,7 +39,7 @@ class CSRSpreadsheet(BaseSpreadsheet):
         for cell in lCells:
             self.colA.append(cell.col)
             self.valA.append(cell.val)
-            self.colLength =  cell.col
+            self.colLength =  cell.col + 1 # + 1 due to index 0
 
             # checks if the row for the cell is the same as the row focused on for sumA index
             while (row != cell.row):
@@ -51,10 +51,15 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
         # add self again for final cell
         self.sumA.append(sum)
-        
+
         print("colA:", self.colA)
         print("valA:", self.valA)
         print("sumA:", self.sumA)
+        
+        #print("colA:", self.colA)
+        #print("valA:", self.valA)
+        #print("sumA:", self.sumA)
+        #print("colLength:", self.colLength)
 
 
     def appendRow(self):
@@ -64,10 +69,12 @@ class CSRSpreadsheet(BaseSpreadsheet):
         @return True if operation was successful, or False if not.
         """
 
-        
-
         # TO BE IMPLEMENTED
-        self.sumA.append(self.sumA[self.rowNum - 1])
+        if (self.uninitialisedBoardCheck()):
+            return False
+
+        self.sumA.append(self.sumA[self.rowNum()])
+        return True
 
 
     def appendCol(self):
@@ -78,7 +85,11 @@ class CSRSpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
+        if (self.uninitialisedBoardCheck()):
+            return False
+
         self.colLength += 1
+        return True
 
 
     def insertRow(self, rowIndex: int)->bool:
@@ -110,12 +121,18 @@ class CSRSpreadsheet(BaseSpreadsheet):
         return True if operation was successful, or False if not, e.g., colIndex is invalid.
         """
         # TO BE IMPLEMENTED
-        if (colIndex < 0 or colIndex > self.colLength):
+        # check for valid initialisation met
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        if (colIndex < 0 or colIndex > self.colNum() - 1): # where colLength is -1 due to index
             return False
 
-        for col in self.colA:
-            if col >= colIndex:
-                col += 1
+        for i in range(0, len(self.colA)):
+            if self.colA[i] >= colIndex:
+                self.colA[i] += 1
+        
+        self.colLength += 1
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
@@ -134,7 +151,99 @@ class CSRSpreadsheet(BaseSpreadsheet):
         """
 
         # TO BE IMPLEMENTED
+        # check for valid initialisation met
 
+        print()
+        print("UPDATE CALLED")
+        print("Input Row:", rowIndex, "Input Col:", colIndex, "Input Val:", value)
+        print()
+        if (self.uninitialisedBoardCheck()):
+            return False
+        
+        if ((rowIndex < 0 or rowIndex > self.rowNum()) or (colIndex < 0 or colIndex > self.colNum() - 1)):
+            return False
+        
+        print("before")
+        print("colA:", self.colA)
+        print("valA:", self.valA)
+        print("sumA:", self.sumA)
+
+        focusRowCheck = False
+        indexSumA = 1 # the index that corresponds to teh current focusRowIndex (which is + 1 of it)
+        colAIndex = 0 # uses the same index for colA and valA
+        
+        focusRowIndex = 0 # focusRowIndex is the current row in terms of a spreadsheet dimension 
+        rowFound = False
+        prevValue = 0
+
+        while rowFound != True:
+            if focusRowIndex == rowIndex: # find desired row, if so update all future values to fix the new / changed value
+                rowFound = True
+                print("Row found")
+                print("Row:", focusRowIndex)
+                print("colAIndex:",colAIndex)
+                print("sum val", self.sumA[indexSumA], "prev sum val", self.sumA[indexSumA - 1])
+
+                if (self.sumA[indexSumA] != self.sumA[indexSumA - 1]): # checks if the current row has an existing value stored
+
+                    # if input col value is before what is currently stored
+                    if (colIndex < self.colA[colAIndex]):
+                        print("Row stored before")
+                        self.colA.insert(colAIndex, colIndex)
+                        self.valA.insert(colAIndex, value)
+                        self.sumA[indexSumA] = self.sumA[indexSumA] + value
+
+                        for i in range(indexSumA + 1, self.rowNum() + 1):
+                            self.sumA[i] = self.sumA[i] + value
+
+                    # if input col is teh same as the currently stored one (meaning replace)
+                    elif (colIndex == self.colA[colAIndex]):
+                        print("Row replaced")
+                        prevVal = self.valA[colAIndex]
+
+                        self.colA[colAIndex] = colIndex
+                        self.valA[colAIndex] = value
+                        self.sumA[indexSumA] = self.sumA[indexSumA] + value - prevVal
+
+                        for i in range(indexSumA + 1, self.rowNum() + 1):
+                            self.sumA[i] = self.sumA[i] + value - prevVal
+
+                    # if input col value is after what is currently stored
+                    elif (colIndex > self.colA[colAIndex]):
+                        print("Row stored after")
+                        colAIndex + 1
+                        self.colA.insert(colAIndex, colIndex)
+                        self.valA.insert(colAIndex, value)
+                        self.sumA[indexSumA] = self.sumA[indexSumA] + value
+
+                        for i in range(indexSumA + 1, self.rowNum() + 1):
+                            self.sumA[i] = self.sumA[i] + value
+                else:
+                    print("Row stored before due to only val in row")
+                    self.colA.insert(colAIndex, colIndex)
+                    self.valA.insert(colAIndex, value)
+                    self.sumA[indexSumA] = self.sumA[indexSumA] + value
+
+                    for i in range(indexSumA + 1, self.rowNum() + 1):
+                        self.sumA[i] = self.sumA[i] + value
+
+                self.sumA = [round(x,1) for x in self.sumA]
+
+                
+
+            else: # if desired row is not found, check if the current row has a new value by looking a tthe sumA[currIndex] compared to previous
+                print("Row NOT found")
+                if (self.sumA[indexSumA] != self.sumA[indexSumA - 1]):
+                    colAIndex += 1
+
+            indexSumA += 1
+            focusRowIndex += 1
+        print()
+
+
+        print("colA:", self.colA)
+        print("valA:", self.valA)
+        print("sumA:", self.sumA)
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
 
@@ -144,7 +253,6 @@ class CSRSpreadsheet(BaseSpreadsheet):
         @return Number of rows the spreadsheet has.
         """
         # TO BE IMPLEMENTED
-
         return len(self.sumA) - 1
 
 
@@ -168,6 +276,19 @@ class CSRSpreadsheet(BaseSpreadsheet):
 	    """
 
         # TO BE IMPLEMENTED
+        if (self.uninitialisedBoardCheck()):
+            return False
+
+        # see if value is not in valA, and if so return empty array 
+        if value not in self.valA:
+            return []
+        
+        returnCells = []
+        currRowIndex = 0
+        currRowSumAIndex = 1 # row index 0 is at sumA[1]
+
+        # if so see which row by checking when sum vals is >= input (this accounts for multiple numbers in a row)
+
 
         # REPLACE WITH APPROPRIATE RETURN VALUE
         return []
@@ -176,13 +297,15 @@ class CSRSpreadsheet(BaseSpreadsheet):
 
 
     def entries(self) -> [Cell]:
-        """
+        """ 
         @return a list of cells that have values (i.e., all non None cells).
         """
 
+        # basically how we construct :sip: but for sumA to find row
+
         return []
 
-    def quickSortCol(self, lCells: [Cell]) -> [Cell]:
+    def quickSortCol(self, lCells: [Cell]) -> [Cell]: # FIX ME sort for numbers in the same row w/diff columns
         """
         @return a sorted list of the inputted cells.
         """
@@ -200,7 +323,21 @@ class CSRSpreadsheet(BaseSpreadsheet):
                 if (lCells[i].row < pivot.row):
                     leftVals.append(lCells[i])
 
+                # FIX ME
+                #elif lCells[i].row == pivot.row:
+
+
                 else:
                     rightVals.append(lCells[i])
         
         return self.quickSortCol(leftVals) + [pivot] + self.quickSortCol(rightVals)
+    
+    def uninitialisedBoardCheck(self) -> bool:
+        """
+        @return Returns false if rowNum or colNum do not exist, otherwise returns true.
+        """
+
+        if (self.rowNum() < 0 or self.colNum() < 0):
+            return True
+        
+        return False
