@@ -54,7 +54,7 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
             self.row_tail.prev = row_node
             for i in range(self.num_cols):
                 new_node = Node()
-                new_node.data = Cell(i, j, 0)
+                new_node.data = Cell(i, j, 0) # FIXME: empty spreadsheet is created but regardless of what i set the data to, it always returns an Attribute Error
                 new_node.prev = row_node
                 row_node.next = new_node
                 row_node = new_node
@@ -72,7 +72,7 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
 
         # updates the empty spreadsheet to include the sample data
         for i in range(len(lCells)):
-            self.update(lCells[i].row, lCells[i].col, lCells[i].val)  
+            self.update(lCells[i].row, lCells[i].col, lCells[i].val)
 
 
     def appendRow(self):
