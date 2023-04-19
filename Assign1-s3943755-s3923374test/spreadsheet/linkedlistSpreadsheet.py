@@ -9,13 +9,10 @@ class Cell:
         self.val = val
 
 class Node:
-    def __init__(self, cell = None):
-        self.cell = cell
-        self.right = None
-        self.down = None
-        self.up = None
-        self.left = None
-
+    def __init__(self, data = None):
+        self.data = data
+        self.prev = None
+        self.next = None
 # ------------------------------------------------------------------------
 # This class  is required TO BE IMPLEMENTED
 # Linked-List-based spreadsheet implementation.
@@ -27,15 +24,16 @@ class Node:
 class LinkedListSpreadsheet(BaseSpreadsheet):
 
     def __init__(self):
-        # TO BE IMPLEMENTED
-        self.head = Node()
-        self.head.right = self.head
-        self.head.left = self.head
-        self.head.up = self.head
-        self.head.down = self.head
-        self.rowHeads = []
-        self.colHeads = []
-
+        self.row_head = Node()
+        self.row_tail = Node()
+        self.row_head.next = self.row_tail
+        self.row_tail.prev = self.row_head
+        self.col_head = Node()
+        self.col_tail = Node()
+        self.col_head.next = self.col_tail
+        self.col_tail.prev = self.col_head
+        self.num_rows = 0
+        self.num_cols = 0
 
     def buildSpreadsheet(self, lCells: [Cell]):
         """
@@ -43,47 +41,38 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @param lCells: list of cells to be stored
         """
 
-        # TO BE IMPLEMENTED
+        # sets the num_rows and num_cols variables to the maximum dimensions possible from the sample data
+        self.num_rows = max(lCells, key = lambda c: c.row).row + 1
+        self.num_cols = max(lCells, key = lambda c: c.col).col + 1
 
-        # initialize column headers
-        for i in range(max(lCells, key = lambda c: c.col).col + 1):
-            colHead = Node()
-            colHead.right = colHead
-            colHead.left = colHead
-            colHead.up = colHead
-            colHead.down = colHead
-            self.colHeads.append(colHead)
+        # builds an empty spreadsheet along with the pointers for the nodes
+        for j in range(self.num_rows):
+            row_node = Node()
+            row_node.prev = self.row_tail.prev
+            self.row_tail.prev.next = row_node
+            row_node.next = self.row_tail
+            self.row_tail.prev = row_node
+            for i in range(self.num_cols):
+                new_node = Node()
+                new_node.data = Cell(i, j, 0) # FIXME: empty spreadsheet is created but regardless of what i set the data to, it always returns an Attribute Error
+                new_node.prev = row_node
+                row_node.next = new_node
+                row_node = new_node
+                prev_col_node = self.col_head
+                for k in range(j):
+                    prev_col_node = prev_col_node.next
+                prev_col_node.next.prev = new_node
+                new_node.next = prev_col_node.next
+                prev_col_node.next = new_node
+                new_node.prev_col = prev_col_node
+                row_node.next_row = self.col_head.next
+                self.col_head.next.prev_col = row_node
+        row_node.next_row = self.col_head.next
+        self.col_head.next.prev_col = row_node
 
-        # initialize row headers
-        for i in range(max(lCells, key = lambda c: c.row).row + 1):
-            rowHead = Node()
-            rowHead.right = rowHead
-            rowHead.left = rowHead
-            rowHead.up = rowHead
-            rowHead.down = rowHead
-            self.rowHeads.append(rowHead)
-
-        # add cells to the data structure
-        for cell in lCells:
-            node = Node(cell)
-            rowHead = self.rowHeads[cell.row]
-            colHead = self.colHeads[cell.col]
-            prevNode = colHead
-            while prevNode.down != colHead and prevNode.down.cell.row < cell.row:
-                prevNode = prevNode.down
-            node.down = prevNode.down
-            prevNode.down = node
-            node.up = prevNode
-            node.down.up = node
-
-            prevNode = rowHead
-            while prevNode.right != rowHead and prevNode.right.cell.col < cell.col:
-                prevNode = prevNode.right
-            node.right = prevNode.right
-            prevNode.right = node
-            node.left = prevNode
-            node.right.left = node
-         
+        # updates the empty spreadsheet to include the sample data
+        for i in range(len(lCells)):
+            self.update(lCells[i].row, lCells[i].col, lCells[i].val)
 
 
     def appendRow(self):
@@ -91,15 +80,28 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         Appends an empty row to the spreadsheet.
         """
 
-        # TO BE IMPLEMENTED
-        rowHead = Node()
-        rowHead.right = rowHead
-        rowHead.left = rowHead
-        rowHead.up = self.rowHeads[-1]
-        rowHead.down = self.rowHeads[-1].down
-        self.rowHeads[-1].down = rowHead
-        rowHead.down.up = rowHead
-        self.rowHeads.append(rowHead)
+        new_row_node = Node()
+        new_row_node.prev = self.row_tail.prev
+        self.row_tail.prev.next = self.row_tail
+        self.row_tail.prev = new_row_node
+
+
+        for i in range(self.num_cols):
+            new_node = Node()
+            new_node.data = Cell(i, self.num_rows, 0)
+            new_node.prev = new_row_node
+            new_row_node.next = new_node
+            prev_col_node = self.col_head
+            for k in range(self.num_rows):
+                prev_col_node = prev_col_node.next
+            prev_col_node.next.prev = new_node
+            new_node.next = prev_col_node.next
+            prev_col_node.next = new_node
+            new_node.prev_col = prev_col_node
+            new_row_node.next_row = self.col_head.next
+            self.col_head.next.prev_col = new_row_node
+
+        self.num_rows += 1
 
 
     def appendCol(self):
@@ -108,44 +110,22 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
 
         @return True if operation was successful, or False if not.
         """
-        # TO BE IMPLEMENTED
-        # Create a new column header node
-        newColHead = Node()
-        newColHead.right = newColHead
-        newColHead.left = newColHead
-        newColHead.up = self.head
-        newColHead.down = self.head
+        new_col_tail = Node()
+        new_col_tail.prev = self.col_tail.prev
+        self.col_tail.prev.next = self.col_tail
+        self.col_tail.prev = new_col_tail
 
-        # Link new column header node to previous column header node
-        prevColHead = self.colHeads[-1]
-        prevColHead.right = newColHead
-        newColHead.left = prevColHead
-
-        # Update column header list
-        self.colHeads.append(newColHead)
-
-        # Update nodes in each row
-        for rowHead in self.rowHeads:
-            # Create a new node for the new column
-            newNode = Node()
-            newNode.right = newNode
-            newNode.left = newNode
-            newNode.up = rowHead
-            newNode.down = rowHead.down
-
-            # Link new node to previous node in row
-            prevNode = rowHead
-            while prevNode.right != rowHead and prevNode.right.cell.col < len(self.colHeads) - 1:
-                prevNode = prevNode.right
-            newNode.right = prevNode.right
-            prevNode.right = newNode
-            newNode.left = prevNode
-            newNode.right.left = newNode
-
-            # Update nodes above and below new node
-            newNode.up.down = newNode
-            newNode.down.up = newNode
-
+        curr_row_node = self.row_head.next
+        for i in range(self.num_rows):
+            new_node = Node()
+            new_node.data = Cell(i, self.num_cols, 0)
+            new_node.prev = curr_row_node.prev
+            curr_row_node.prev.next = new_node
+            new_node.next = curr_row_node
+            curr_row_node.prev = new_node
+            curr_row_node = curr_row_node.next
+        
+        self.num_cols += 1
         return True
 
 
@@ -158,37 +138,35 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @return True if operation was successful, or False if not, e.g., rowIndex is invalid.
         """
 
-        # TO BE IMPLEMENTED
-        if rowIndex < 0 or rowIndex >= len(self.rowHeads):
+        # input validation
+        if rowIndex < 0 or rowIndex >= self.num_rows:
             return False
+        else:
+            # find the node corresponding to the row after the new row
+            after_row_node = self.row_head.next
+            for i in range(rowIndex):
+                after_row_node = after_row_node.next
 
-        newRowHead = Node()
-        newRowHead.right = newRowHead
-        newRowHead.left = newRowHead
-        newRowHead.up = self.head
-        newRowHead.down = self.head
+            # create new row node and link it into the row list
+            new_row_node = Node()
+            new_row_node.prev = after_row_node.prev
+            after_row_node.prev.next = new_row_node
+            new_row_node.next = after_row_node
+            after_row_node.prev = new_row_node
 
-        prevRowHead = self.rowHeads[rowIndex]
-        nextRowHead = prevRowHead.down
+            # create col list and pointers, and link the head back to the row list
+            current_col_node = self.col_head.next
+            for j in range(self.num_cols):
+                new_node = Node()
+                new_node.data = Cell(j, rowIndex, 0)
+                new_node.prev_col = current_col_node
+                new_node.next_col = current_col_node.next_col
+                current_col_node.next_col.prev_col = new_node
+                current_col_node.next_col = new_node
+                current_col_node = current_col_node.next_col
 
-        newRowHead.down = nextRowHead
-        nextRowHead.up = newRowHead
-        newRowHead.up = prevRowHead
-        prevRowHead.down = newRowHead
-
-        self.rowHeads.insert(rowIndex + 1, newRowHead)
-
-        for i in range(len(self.colHeads)):
-            newCell = Node(Cell(rowIndex+1, i, 0))
-            prevNode = prevRowHead.right
-            while prevNode != prevRowHead and prevNode.cell.col < i:
-                prevNode = prevNode.right
-            newCell.right = prevNode
-            prevNode.left.right = newCell
-            newCell.left = prevNode.left
-            prevNode.left = newCell
-        # REPLACE WITH APPROPRIATE RETURN VALUE
-        return True
+            self.num_rows += 1
+            return True
 
 
     def insertCol(self, colIndex: int)->bool:
@@ -198,60 +176,35 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @param colIndex Index of the existing column that will be before the newly inserted row.  If inserting as first column, specify colIndex to be -1.
         """
 
-        # TO BE IMPLEMENTED
-        # Check if the column index is valid
-        if colIndex < -1 or colIndex >= len(self.colHeads):
+        # input validation
+        if colIndex < -1 or colIndex >= self.num_cols:
             return False
-
-        # Create a new column header node
-        newColHead = Node()
-        newColHead.right = newColHead
-        newColHead.left = newColHead
-        newColHead.up = self.colHeads[0].up
-        newColHead.down = self.colHeads[0]
-        newColHead.up.down = newColHead
-        newColHead.down.up = newColHead
-
-        # Insert the new column header into the column headers list
         if colIndex == -1:
-            self.colHeads.insert(0, newColHead)
-        else:
-            self.colHeads.insert(colIndex+1, newColHead)
+            colIndex = 0
+        current_row_node = self.row_head.next
+        while current_row_node != self.row_tail:
+            # create new col nodes in specified position
+            new_node = Node()
+            new_node.data = Cell(current_row_node.next.data.row, colIndex, 0)
+            new_node.prev = current_row_node
+            new_node.next = current_row_node.next
+            current_row_node.next.prev = new_node
+            current_row_node.next = new_node
+            current_row_node = current_row_node.next
+        new_col_node = Node()
+        new_col_node.prev = self.col_tail.prev
+        self.col_tail.prev.next = new_col_node
+        new_col_node.next = self.col_tail
+        self.col_tail.prev = new_col_node
+        self.num_cols += 1
+        current_row_node = self.row_head.next
+        while current_row_node != self.row_tail:
+            current_node = current_row_node.next
+            for i in range(colIndex, self.num_cols):
+                current_node.data.col = i
+                current_node = current_node.next
 
-        # Link the new column header with the neighboring columns
-        if colIndex == -1:
-            prevColHead = self.colHeads[1]
-        else:
-            prevColHead = self.colHeads[colIndex]
-        newColHead.left = prevColHead
-        newColHead.right = prevColHead.right
-        prevColHead.right = newColHead
-        newColHead.right.left = newColHead
-
-        # Update the nodes in the new column
-        currNode = newColHead.up
-        while currNode != newColHead:
-            newNode = Node()
-            newNode.cell = Cell(currNode.cell.row, len(self.colHeads) - 2, 0)
-            newNode.up = currNode.up
-            newNode.down = currNode
-            currNode.up.down = newNode
-            currNode.up = newNode
-            prevNode = newNode
-            currNode = currNode.up
-
-            # Link the new node with the neighboring nodes
-            while prevNode.right != newNode and prevNode.right.cell.col < newNode.cell.col:
-                prevNode = prevNode.right
-            newNode.right = prevNode.right
-            prevNode.right = newNode
-            newNode.left = prevNode
-            newNode.right.left = newNode
-
-
-        # REPLACE WITH APPROPRIATE RETURN VALUE
         return True
-
 
     def update(self, rowIndex: int, colIndex: int, value: float) -> bool:
         """
@@ -264,23 +217,21 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @return True if cell can be updated.  False if cannot, e.g., row or column indices do not exist.
         """
 
-        # TO BE IMPLEMENTED
-        # Check if the row and column indices are within the range of the linked list
-        if rowIndex >= len(self.rowHeads) or colIndex >= len(self.colHeads):
+        # input validation
+        if rowIndex < 0 or rowIndex >= self.num_rows or colIndex < 0 or colIndex >= self.num_cols:
             return False
+        else:
+            # navigate to the specified node and change the value
+            current_row_node = self.row_head.next
+            for j in range(rowIndex):
+                current_row_node = current_row_node.next
 
-        # Find the node corresponding to the given cell and update its value
-        rowHead = self.rowHeads[rowIndex]
-        colHead = self.colHeads[colIndex]
-        node = colHead
-        while node.down != colHead and node.down.cell.row <= rowIndex:
-            node = node.down
-            if node.cell and node.cell.row == rowIndex and node.cell.col == colIndex:
-                node.cell.val = value
-                return True
-
-        # If the node is not found, return False
-        return False
+            current_node = current_row_node.next
+            for i in range(colIndex):
+                current_node = current_node.next
+            
+            current_node.data.val = value
+            return True
 
 
     def rowNum(self)->int:
@@ -288,16 +239,14 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @return Number of rows the spreadsheet has.
         """
 
-        # TO BE IMPLEMENTED
-        return len(self.rowHeads) - 1
+        return self.num_rows
 
     def colNum(self)->int:
         """
         @return Number of column the spreadsheet has.
         """
 
-        # TO BE IMPLEMENTED
-        return len(self.colHeads)
+        return self.num_cols
 
 
 
@@ -310,19 +259,17 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @return List of cells (row, col) that contains the input value.
 	    """
 
-        # TO BE IMPLEMENTED
+        # iterates through row and col nodes, searching for cells have the value that match the parameter
         result = []
-
-        # iterate over all rows
-        for rowHead in self.rowHeads:
-            currentNode = rowHead.right
-            while currentNode != rowHead:
-                # check if the cell value matches the input value
-                if currentNode.cell.val == value:
-                    # add the cell's row and column to the result list
-                    result.append((currentNode.cell.row, currentNode.cell.col))
-                currentNode = currentNode.right
-        # REPLACE WITH APPROPRIATE RETURN VALUE
+        curr_node = self.row_head.next
+        while curr_node != self.row_tail:
+            row_node = curr_node
+            col_node = row_node.next
+            while col_node != None:
+                if col_node.data.val == value:
+                    result.append((col_node.data.row, col_node.data.col))
+                col_node = col_node.next
+            curr_node = curr_node.next
         return result
 
 
@@ -332,14 +279,15 @@ class LinkedListSpreadsheet(BaseSpreadsheet):
         @return A list of cells that have values (i.e., all non None cells).
         """
 
-        # TO BE IMPLEMENTED
+        # iterates through row and col nodes, searching for cells have values
         cells = []
-        for rowHead in self.rowHeads:
-            currNode = rowHead.right
-            while currNode != rowHead:
-                if currNode.cell is not None:
-                    cells.append(currNode.cell)
-                currNode = currNode.right
-
-        # TO BE IMPLEMENTED
+        curr_row_node = self.row_head.next
+        while curr_row_node != self.row_tail:
+            curr_col_node = curr_row_node.next
+            while curr_col_node != None:
+                if curr_col_node.data.val != None:
+                    cells.append(curr_col_node.data)
+                curr_col_node = curr_col_node.next
+            curr_row_node = curr_row_node.next
+        
         return cells
