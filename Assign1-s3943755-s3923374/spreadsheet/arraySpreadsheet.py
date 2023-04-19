@@ -38,6 +38,7 @@ class ArraySpreadsheet(BaseSpreadsheet):
         for cell in lCells:
             if (rowMax < cell.row):
                 rowMax = cell.row
+
             if (colMax < cell.col):
                 colMax = cell.col
 
